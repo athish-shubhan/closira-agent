@@ -1,4 +1,4 @@
-# Closira AI Workflow — Bloom Aesthetics Clinic
+# Closira AI Workflow - Bloom Aesthetics Clinic
 
 A Python CLI that simulates a full customer support session for an SMB aesthetics clinic — FAQ answering, lead qualification, escalation detection, and a structured session summary at the end.
 
