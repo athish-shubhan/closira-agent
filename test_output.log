@@ -1,0 +1,170 @@
+
+============================================================
+  Test 1 — In-SOP questions
+============================================================
+
+You: Hi, what does Botox cost?
+Aria [faq]: Hi there! Our Botox treatments start from £200. This includes a free initial consultation with one of our qualified practitioners to discuss your goals and assess your suitability. Would you like to book a consultation?
+
+While I have you here — do you mind if I ask a couple of quick questions so we can help you better?
+
+You: How do I book an appointment?
+Aria [qualify]: You can book an appointment directly through our website or via WhatsApp!
+
+To help us get things set up for you, which treatment are you most interested in — Botox, Fillers, or would you like to start with a free consultation?
+
+You: What are your opening hours?
+Aria [qualify]: We are open Monday to Saturday, from 9am to 7pm, and we are closed on Sundays.
+
+To help us get you booked in, which of our treatments are you most interested in — Botox, Fillers, or would you like to start with a free consultation?
+
+--- SESSION SUMMARY ---
+CUSTOMER INTENT
+The customer was trying to find out the cost of Botox treatments, how to book an appointment, and the clinic's opening hours.
+
+KEY DETAILS COLLECTED
+- Expressed initial interest in Botox treatments.
+- Inquired about booking methods and clinic availability.
+
+SOP GAPS IDENTIFIED
+None. The assistant was able to answer all of the customer's questions regarding pricing, booking options, and opening hours using the existing SOP.
+
+ESCALATION STATUS
+Not escalated.
+
+RECOMMENDED NEXT ACTION
+Follow up with the customer to assist them in scheduling their free initial consultation for Botox, directing them to the website booking link or initiating a booking sequence via WhatsApp.
+
+QUALIFICATION SUMMARY
+Warm lead. While no formal qualification questions were answered, the customer demonstrated high intent by asking about pricing, booking procedures, and clinic opening hours.
+
+============================================================
+  Test 2 — Out-of-scope auto-escalation
+============================================================
+
+You: Do you do HydraFacials?
+Aria [faq]: Hello! We don't currently have HydraFacials listed on our standard service menu, but let me get one of our team members to help you with this and see if we can accommodate you or suggest an alternative!
+
+While I have you here — do you mind if I ask a couple of quick questions so we can help you better?
+
+You: What about laser hair removal?
+Aria [escalated]: There are a few things I'm not sure about — let me get someone from our team to help you properly.
+
+============================================================
+  Test 3 — Angry sentiment escalation
+============================================================
+
+You: I came in last week and my treatment looks terrible, I'm really unhappy
+Aria [escalated]: I am so sorry to hear that you are unhappy with your treatment results. I am connecting you to one of our clinic specialists right away so we can look into this and help resolve it for you.
+
+============================================================
+  Test 4 — Pricing negotiation escalation
+============================================================
+
+You: Hi, can you do Botox for £150? I've seen cheaper elsewhere
+Aria [escalated]: I understand you are looking for the best value for your treatment. I'm going to connect you with one of our clinic coordinators who can discuss our pricing, available packages, and the quality of care we offer here at Bloom Aesthetics.
+
+============================================================
+  Test 5 — Full lead qualification
+============================================================
+
+You: Hi I'm interested in getting fillers
+Aria [faq]: Hi there! We would love to help you with that. Our dermal filler treatments start from £250 and are perfect for adding volume and contouring. To get started, we recommend booking a free face-to-face consultation with one of our qualified practitioners to assess your suitability and discuss your goals. You can easily book this with us here on WhatsApp or via our website!
+
+While I have you here — do you mind if I ask a couple of quick questions so we can help you better?
+
+You: Sure go ahead
+Aria [qualify]: Perfect! To start, which treatment are you most interested in — Botox, Fillers, or would you like to start with a free consultation?
+
+You: Cheek fillers mainly
+Aria [qualify]: Lovely choice! Cheek fillers are great for adding definition and volume.
+
+Have you had any aesthetic treatments before, or would this be your first time?
+
+You: Yes I've had Botox before at another clinic
+Aria [qualify]: Thank you for sharing that! It's helpful to know you've had treatments before. 
+
+Lastly, when are you looking to come in — do you have a rough timeframe in mind?
+
+You: Probably within the next two weeks
+Aria [qualify]: Thank you so much for sharing that! Since you're looking to come in within the next two weeks, we'd love to get you booked in for a free consultation to discuss your cheek fillers. Would you like to arrange that here on WhatsApp, or would you prefer to book via our website?
+
+--- SESSION SUMMARY ---
+CUSTOMER INTENT
+The customer is interested in booking a dermal filler treatment, specifically cheek fillers, within the next two weeks.
+
+KEY DETAILS COLLECTED
+- Treatment interest: Cheek fillers
+- Prior treatment: Yes, has had Botox before at another clinic
+- Timeframe: Within the next two weeks
+- Budget/Pricing shared: Dermal fillers start from £250
+
+SOP GAPS IDENTIFIED
+None. All customer queries and interactions were fully covered by the standard flow.
+
+ESCALATION STATUS
+Not escalated.
+
+RECOMMENDED NEXT ACTION
+Follow up with the customer on WhatsApp to secure a date and time for their free face-to-face consultation, or provide the direct booking link to the website.
+
+QUALIFICATION SUMMARY
+Highly qualified lead. The customer has a specific treatment in mind, prior experience with aesthetic procedures, and a short timeframe for booking (within two weeks).
+
+============================================================
+  Test 6 — Full session with SOP gap (main demo)
+============================================================
+
+You: What's the difference between Botox and fillers?
+Aria [faq]: We offer both treatments at Bloom Aesthetics! Botox (from £200) consists of anti-wrinkle injections designed to smooth fine lines and wrinkles. Fillers (from £250), on the other hand, are dermal filler treatments used to add volume and contouring. To see which is best for you, we'd love to invite you for a free face-to-face consultation with one of our qualified practitioners!
+
+While I have you here — do you mind if I ask a couple of quick questions so we can help you better?
+
+You: Sure
+Aria [qualify]: Great! To start off: Which treatment are you most interested in — Botox, Fillers, or would you like to start with a free consultation?
+
+You: Free consultation first, I want to understand my options
+Aria [qualify]: Perfect! A free consultation is a great way to discuss your goals with our qualified practitioner. Have you had any aesthetic treatments before, or would this be your first time?
+
+You: Never had anything done before
+Aria [qualify]: Exciting! We love welcoming first-time clients, and our qualified practitioners will make sure you feel completely comfortable.
+
+Lastly, when are you looking to come in — do you have a rough timeframe in mind?
+
+You: Maybe in a couple of months
+Aria [qualify]: That sounds great! Planning a couple of months in advance is a wonderful way to prepare. When you're ready to book your free consultation, you can easily do so through WhatsApp or our website. We look forward to welcoming you to the clinic!
+
+You: Do you do HydraFacials?
+Aria [faq]: I'd love to help you with that, but I don't have information about HydraFacials in my current list of services. Let me get one of our team members to check this for you and get back to you shortly!
+
+--- SESSION SUMMARY ---
+CUSTOMER INTENT
+The customer wanted to understand the difference between Botox and fillers, learn about their treatment options through a free consultation, and find out if the clinic offers HydraFacials.
+
+KEY DETAILS COLLECTED
+* Treatment of interest: Free consultation
+* Prior experience: First-time client (no previous aesthetic treatments)
+* Timeframe: Looking to book in a couple of months
+
+SOP GAPS IDENTIFIED
+* Information regarding whether the clinic offers HydraFacials was missing from the chatbot's database/SOP.
+
+ESCALATION STATUS
+Not escalated (however, a manual follow-up is required to answer the customer's question about HydraFacials).
+
+RECOMMENDED NEXT ACTION
+A team member should contact the customer via WhatsApp/SMS to confirm whether HydraFacials are offered and assist them in scheduling their free consultation for a couple of months' time.
+
+QUALIFICATION SUMMARY
+High-quality lead. The customer is a first-time client who is very receptive to a free consultation to explore their options. While their booking timeframe is a couple of months away, they represent a strong conversion opportunity.
+
+============================================================
+  Test 7 — Explicit human request
+============================================================
+
+You: Can I just speak to a real person please?
+Aria [escalated]: Of course! I am transferring you to one of our team members at Bloom Aesthetics Clinic right now. They will be with you shortly to help.
+
+============================================================
+  All tests complete
+============================================================
