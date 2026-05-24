@@ -1,8 +1,8 @@
 # Closira AI Workflow - Bloom Aesthetics Clinic
 
-A Python CLI that simulates a full customer support session for an SMB aesthetics clinic — FAQ answering, lead qualification, escalation detection, and a structured session summary at the end.
+A Python CLI that simulates a full customer support session for an SMB aesthetics clinic - FAQ answering, lead qualification, escalation detection, and a structured session summary at the end.
 
-> **API note:** The assignment specifies OpenAI or Anthropic Claude. This implementation uses Google Gemini (`gemini-3.5-flash`) for free-tier access during development. The architecture is fully API-agnostic — all LLM calls go through a single `_call()` function in `stages.py`. Swapping to Claude is a ~5-line change; see [Switching to Claude](#switching-to-claude) below.
+> **API note:** The assignment specifies OpenAI or Anthropic Claude. This implementation uses Google Gemini (`gemini-3.5-flash`) for free-tier access during development. The architecture is fully API-agnostic - all LLM calls go through a single `_call()` function in `stages.py`. Swapping to Claude is a ~5-line change; see [Switching to Claude](#switching-to-claude) below.
 
 ---
 
@@ -45,7 +45,7 @@ python run_tests.py
 
 Type messages at the prompt. A few things worth knowing:
 
-- Type `done` or `exit` to end the session — this triggers the conversation summary
+- Type `done` or `exit` to end the session - this triggers the conversation summary
 - Type `status` at any point to see which stage you're in
 - The AI is called Aria and operates only from the SOP defined in `sop_data.json`
 
