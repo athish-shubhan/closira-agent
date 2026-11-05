@@ -26,7 +26,7 @@ $ git stash; pytest -q tests     # new tests against the original code
 ```
 I also checked the Quick start from a clean clone of this branch: a new venv, `pip install -r requirements.txt -r requirements-dev.txt`, then `pytest -q` (36 passed) and `ruff check .` (passed). Without a key, `python main.py` prints `[ERROR] Set GEMINI_API_KEY or GEMINI_API_KEYS ...` and exits.
 
-**Not verified:** `python run_tests.py` and `python main.py` against the real Gemini API. No API key was available in this environment, so live model behaviour and the transcripts in `test_transcripts/` / `test_output.log` were not re-run. Those recordings predate fix 2, so transcript 02 still shows the old behaviour.
+**Not verified:** `python run_tests.py` and `python main.py` against the real Gemini API. No API key was available in this environment, so live model behaviour and the transcripts in `test_transcripts/` / `test_output.log` were not re-run. Those recordings predate fix 2, so transcript 02 still shows the old behaviour. The model name `gemini-3.5-flash` and the "20 req/day" free-tier limit in the README were left as they are.
 
 ### Files touched
 `agent.py`, `stages.py`, `main.py`, `run_tests.py`, `README.md`, `tests/` (new), `.github/workflows/ci.yml` (new), `pyproject.toml` (new), `requirements-dev.txt` (new), `.gitignore` (new), `IMPROVEMENTS.md` (new); removed `__pycache__/*.pyc` and `.DS_Store` from git.
