@@ -29,11 +29,19 @@ If you're on the free tier (20 req/day limit), you can pass multiple keys and th
 export GEMINI_API_KEYS="key_one,key_two,key_three"
 ```
 
+Optionally set a per-request timeout in milliseconds (default 30000):
+
+```bash
+export GEMINI_TIMEOUT_MS=30000
+```
+
 Then run:
 
 ```bash
 python main.py
 ```
+
+If a call to Gemini fails (network error, timeout, all keys out of quota), the CLI prints the error and lets you retry that message, instead of ending the session.
 
 ---
 
@@ -41,7 +49,7 @@ python main.py
 
 There are two kinds of tests.
 
-**Unit tests (offline, no API key).** The LLM is replaced by a scripted fake, so these check the agent's own logic: JSON parsing and fallbacks, the confidence threshold, the out-of-SOP escalation counter, the qualification flow and escalation logging. CI runs them with `ruff` on every push and pull request.
+**Unit tests (offline, no API key).** The LLM is replaced by a scripted fake, so these check the agent's own logic: JSON parsing and fallbacks, API-key rotation and rate-limit retries, the request timeout, the confidence threshold, the out-of-SOP escalation counter, the qualification flow and escalation logging. CI runs them with `ruff` on every push and pull request.
 
 ```bash
 pip install -r requirements-dev.txt

@@ -30,3 +30,43 @@ I also checked the Quick start from a clean clone of this branch: a new venv, `p
 
 ### Files touched
 `agent.py`, `stages.py`, `main.py`, `run_tests.py`, `README.md`, `tests/` (new), `.github/workflows/ci.yml` (new), `pyproject.toml` (new), `requirements-dev.txt` (new), `.gitignore` (new), `IMPROVEMENTS.md` (new); removed `__pycache__/*.pyc` and `.DS_Store` from git.
+
+## Round 2 — 2026-11-05
+
+### What changed
+1. **Tests for `_call` (12 tests, `tests/test_call.py`).** The key rotation and rate-limit retry logic had no tests. Fake clients now cover these cases: success; no keys configured; daily quota rotating to the next key; all keys exhausted; per-minute limit sleeping for `retryDelay + 5`; the fallback delay; giving up after `_RT_MAX` attempts; non-rate-limit errors not being retried; role mapping.
+2. **Request timeout.** Gemini clients are now created with `HttpOptions(timeout=GEMINI_TIMEOUT_MS)` (default 30 s). Before this, a stalled connection hung the CLI with no limit. A test runs the real SDK against a local socket that accepts but never responds and checks for a timeout error.
+3. **One failed API call no longer ends the session.** `main.py` used to let any exception from `ag.process()` or `generate_summary()` escape, so one network error printed a traceback and lost the conversation and its summary. The CLI now prints the error and keeps going. The unanswered customer message is removed from history (`WorkflowAgent.discard_last_message`), so retrying doesn't send it twice. `tests/test_main.py` (3 tests) drives the real `main.run()` loop.
+4. **Smaller fixes.** `_call` with no keys now raises a clear `RuntimeError` instead of `IndexError`. Rate limits are detected by `ex.code == 429` or `RESOURCE_EXHAUSTED`, not by searching the message for the substring "429".
+5. **README.** Documented `GEMINI_TIMEOUT_MS` and the error behaviour.
+
+### Why it matters
+The retry and rotation code is the most stateful part of the project, and it now has tests. The CLI can survive the free-tier quota errors the README says to expect.
+
+### How it was verified
+```
+$ pytest -q
+50 passed in 0.70s            # was 36 after round 1
+$ ruff check .
+All checks passed!
+
+# new tests against the round-1 code:
+$ pytest -q tests/test_call.py
+2 failed, 9 passed            # no-keys IndexError, no timeout configured
+$ pytest -q tests/test_main.py
+ERROR ... 'WorkflowAgent' has no attribute 'discard_last_message'
+
+# real SDK against a local socket that never responds:
+timeout=500:  ReadTimeout after 0.55s
+timeout=None: still hanging after 15s (killed by `timeout 15`, exit 124)
+
+# CLI with an agent whose process() raises ConnectionError
+before: ConnectionError: network down   (traceback, session over)
+after:  [ERROR] Couldn't reach the AI service (network down). Please try that message again.
+        ... Session ended. Thank you.
+```
+
+**Not verified:** behaviour against the real Gemini API, including the real format of rate-limit errors. The fake errors copy the strings the existing code already looked for (`PerDay`, `retryDelay`, `RESOURCE_EXHAUSTED`). No API key was available.
+
+### Files touched
+`stages.py`, `agent.py`, `main.py`, `README.md`, `tests/test_call.py` (new), `tests/test_main.py` (new), `IMPROVEMENTS.md`.

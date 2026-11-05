@@ -8,9 +8,12 @@ from google.genai import types
 
 from sop import get_sop_text
 
+# Per-request timeout for Gemini calls; without one a stalled connection hangs the CLI.
+TIMEOUT_MS = int(os.environ.get("GEMINI_TIMEOUT_MS", "30000"))
+
 _rw = os.environ.get("GEMINI_API_KEYS") or os.environ.get("GEMINI_API_KEY") or ""
 _kl = [k.strip() for k in _rw.split(",") if k.strip()]
-_cp = [genai.Client(api_key=k) for k in _kl]
+_cp = [genai.Client(api_key=k, http_options=types.HttpOptions(timeout=TIMEOUT_MS)) for k in _kl]
 _ki = 0
 MN = "gemini-3.5-flash"
 
@@ -140,8 +143,20 @@ _RT_MAX = 3
 _RT_FB = 35
 
 
+def _is_rate_limit(ex):
+    return getattr(ex, "code", None) == 429 or "RESOURCE_EXHAUSTED" in str(ex)
+
+
 def _call(sy, ms):
+    """Send one request to Gemini and return the reply text.
+
+    Rate limits are handled here: a daily-quota error rotates to the next API key,
+    a per-minute error sleeps for the server's retryDelay and retries (up to
+    _RT_MAX attempts). Any other error is raised to the caller.
+    """
     global _ki
+    if not _cp:
+        raise RuntimeError("No Gemini API key configured (set GEMINI_API_KEY or GEMINI_API_KEYS).")
     ct, cf = _fmt_contents(sy, ms)
     pt = 0
     rk = 0
@@ -151,7 +166,7 @@ def _call(sy, ms):
             return rs.text
         except Exception as ex:
             xs = str(ex)
-            if "429" not in xs and "RESOURCE_EXHAUSTED" not in xs:
+            if not _is_rate_limit(ex):
                 raise
             if "PerDay" in xs:
                 if rk >= len(_cp) - 1:
