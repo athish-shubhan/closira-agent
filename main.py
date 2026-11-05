@@ -44,7 +44,10 @@ def run():
         if up.lower() in ("exit", "done", "bye", "goodbye", "quit"):
             print("\n─────────────────────────────────────────────")
             print("Generating session summary...\n")
-            sm = ag.generate_summary()
+            try:
+                sm = ag.generate_summary()
+            except Exception as er:  # noqa: BLE001 - keep the CLI alive on any API failure
+                sm = f"[Summary unavailable: {er}]"
             print("SESSION SUMMARY")
             print("─────────────────────────────────────────────")
             print(sm)
@@ -56,7 +59,12 @@ def run():
             print(f"[Stage: {STAGE_LABELS.get(cs, cs)}]\n")
             continue
 
-        rs, cs = ag.process(up)
+        try:
+            rs, cs = ag.process(up)
+        except Exception as er:  # noqa: BLE001 - one failed API call should not end the session
+            ag.discard_last_message()
+            print(f"\n[ERROR] Couldn't reach the AI service ({er}). Please try that message again.\n")
+            continue
         print(f"\nAria: {rs}\n")
 
         if cs == "escalated":

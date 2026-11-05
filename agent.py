@@ -88,6 +88,11 @@ class WorkflowAgent:
         self.hs.append({"role": "assistant", "content": ar})
         return ar, "faq"
 
+    def discard_last_message(self):
+        """Drop a trailing customer message that never got a reply (e.g. the API call failed)."""
+        if self.hs and self.hs[-1]["role"] == "user":
+            self.hs.pop()
+
     def generate_summary(self):
         if not self.hs:
             return "No conversation to summarise."
