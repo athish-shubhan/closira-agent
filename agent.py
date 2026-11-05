@@ -1,8 +1,11 @@
 import os
-from stages import run_faq, run_escalation_check, run_qualification, run_summary
+
 from logger import log_escalation
+from stages import run_escalation_check, run_faq, run_qualification, run_summary
 
 QUALIFY_AFTER = 1
+MAX_UNANSWERED = 2
+UNANSWERED_HANDOFF = "There are a few things I'm not sure about — let me get someone from our team to help you properly."
 
 
 class WorkflowAgent:
@@ -19,7 +22,16 @@ class WorkflowAgent:
         self.er = ""
         self.ac = 0
 
+    def _escalate_unanswered(self, up):
+        """Hand off after MAX_UNANSWERED questions the SOP could not answer."""
+        self.es = True
+        self.er = "Multiple out-of-SOP questions"
+        log_escalation(self.er, up, len(self.hs))
+        self.hs.append({"role": "assistant", "content": UNANSWERED_HANDOFF})
+        return UNANSWERED_HANDOFF, "escalated"
+
     def process(self, up):
+        """Handle one customer message; returns (reply, stage) where stage is faq, qualify or escalated."""
         self.hs.append({"role": "user", "content": up})
 
         if self.es:
@@ -46,13 +58,8 @@ class WorkflowAgent:
             if rt.get("sop_gap"):
                 self.uc += 1
 
-            if self.uc >= 2:
-                self.es = True
-                self.er = "Multiple out-of-SOP questions"
-                log_escalation(self.er, up, len(self.hs))
-                rs = "There are a few things I'm not sure about — let me get someone from our team to help you properly."
-                self.hs.append({"role": "assistant", "content": rs})
-                return rs, "escalated"
+            if self.uc >= MAX_UNANSWERED:
+                return self._escalate_unanswered(up)
 
             if rt.get("complete"):
                 self.st = "faq"
@@ -65,18 +72,16 @@ class WorkflowAgent:
         if not rt["in_sop"]:
             self.uc += 1
 
-        if self.uc >= 2:
-            self.es = True
-            self.er = "Multiple out-of-SOP questions"
-            log_escalation(self.er, up, len(self.hs))
-            rs = "There are a few things I'm not sure about — let me get someone from our team to help you properly."
-            self.hs.append({"role": "assistant", "content": rs})
-            return rs, "escalated"
+        if self.uc >= MAX_UNANSWERED:
+            return self._escalate_unanswered(up)
 
         ar = rt["answer"]
-        self.ac += 1
+        # Only answers grounded in the SOP count towards starting qualification;
+        # appending "can I ask you a few questions?" to a handoff message reads badly.
+        if rt["in_sop"]:
+            self.ac += 1
 
-        if self.ac == QUALIFY_AFTER and self.st == "faq" and not self.es:
+        if rt["in_sop"] and self.ac == QUALIFY_AFTER and self.st == "faq":
             self.st = "qualify"
             ar += "\n\nWhile I have you here — do you mind if I ask a couple of quick questions so we can help you better?"
 

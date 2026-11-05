@@ -6,12 +6,14 @@ A Python CLI that simulates a full customer support session for an SMB aesthetic
 
 ---
 
-## Setup
+## Quick start
+
+Requires Python 3.10+.
 
 ```bash
-git clone <repo>
+git clone https://github.com/athish-shubhan/closira-agent.git
 cd closira-agent
-
+python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
@@ -33,7 +35,21 @@ Then run:
 python main.py
 ```
 
-To run all automated tests:
+---
+
+## Testing
+
+There are two kinds of tests.
+
+**Unit tests (offline, no API key).** The LLM is replaced by a scripted fake, so these check the agent's own logic: JSON parsing and fallbacks, the confidence threshold, the out-of-SOP escalation counter, the qualification flow and escalation logging. CI runs them with `ruff` on every push and pull request.
+
+```bash
+pip install -r requirements-dev.txt
+pytest -q
+ruff check .
+```
+
+**Live scenario runner (needs `GEMINI_API_KEY`).** `run_tests.py` plays 7 scripted conversations against the real model and prints the transcripts. It does not assert anything; the recorded output is in `test_output.log` and `test_transcripts/`.
 
 ```bash
 python run_tests.py
@@ -68,11 +84,11 @@ Customer Message
 
 ### Stage 1 — FAQ
 
-Answers from the SOP only. The model returns structured JSON with a `thought` field (chain-of-thought reasoning before committing to an answer), `in_sop` (boolean), `confidence` (0–1 float), and any `sop_gaps` identified. If confidence is below 0.4 or the question isn't in the SOP, Aria tells the customer she'll get someone from the team rather than guessing.
+Answers from the SOP only. The model returns structured JSON with a `thought` field (chain-of-thought reasoning before committing to an answer), `in_sop` (boolean), `confidence` (0–1 float), and any `sop_gaps` identified. If confidence is below 0.4 (`CONFIDENCE_THRESHOLD` in `stages.py`) or the question isn't in the SOP, Aria tells the customer she'll get someone from the team rather than guessing, and the question counts towards the 2-unanswered escalation rule.
 
 ### Stage 2 — Lead Qualification
 
-After the first successful FAQ answer, Aria asks three qualification questions one at a time: treatment interest, prior experience, and rough timeline. Responses are collected into a structured dict and surfaced in the final summary.
+After the first successful (in-SOP) FAQ answer, Aria asks three qualification questions one at a time: treatment interest, prior experience, and rough timeline. Responses are collected into a structured dict and surfaced in the final summary.
 
 ### Stage 3 — Escalation Detection
 
@@ -96,7 +112,10 @@ closira-agent/
 ├── sop_data.json             # The SOP — edit this to change the business context
 ├── prompt_design.md          # System prompts and full design reasoning
 ├── requirements.txt
-├── run_tests.py              # Automated test runner (7 scenarios)
+├── run_tests.py              # Live scenario runner (7 conversations, needs an API key)
+├── tests/                    # Offline pytest suite (LLM mocked)
+├── pyproject.toml            # ruff + pytest config
+├── requirements-dev.txt      # pytest, ruff
 ├── logs/
 │   └── escalations.jsonl     # Appended at runtime
 └── test_transcripts/
@@ -149,8 +168,8 @@ The `messages` format (`role` + `content`) is identical between Gemini and Claud
 ## Tradeoffs and Known Limitations
 
 - **No streaming.** API calls block until the full response returns. Fine for a CLI demo; a production version would stream.
-- **JSON parse failures fall back silently.** If the model returns malformed JSON, the agent uses a safe default rather than retrying. A better approach would be to retry with the bad output attached as context so the model can self-correct.
+- **JSON parse failures fall back silently.** The parser accepts bare JSON, fenced JSON and JSON wrapped in prose, and fills any missing keys with safe defaults; if no JSON object is found the agent uses a safe default rather than retrying. A better approach would be to retry with the bad output attached as context so the model can self-correct.
 - **Confidence threshold is hardcoded at 0.4.** Works reasonably well for this SOP but should be calibrated against real conversation data.
 - **No persistence.** Session state lives in the `WorkflowAgent` instance and is lost when the script exits.
-- **Qualification triggers after the first FAQ answer.** Controlled by `QUALIFY_AFTER` in `agent.py` — bump it to allow more back-and-forth before qualification starts.
+- **Qualification triggers after the first in-SOP FAQ answer.** Controlled by `QUALIFY_AFTER` in `agent.py` — bump it to allow more back-and-forth before qualification starts.
 - **One model for all stages.** A production setup would use a lighter model for the escalation classifier since it runs on every single message.
