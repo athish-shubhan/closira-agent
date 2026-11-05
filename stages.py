@@ -2,8 +2,10 @@ import json
 import os
 import re
 import time
+
 from google import genai
 from google.genai import types
+
 from sop import get_sop_text
 
 _rw = os.environ.get("GEMINI_API_KEYS") or os.environ.get("GEMINI_API_KEY") or ""
@@ -11,6 +13,13 @@ _kl = [k.strip() for k in _rw.split(",") if k.strip()]
 _cp = [genai.Client(api_key=k) for k in _kl]
 _ki = 0
 MN = "gemini-3.5-flash"
+
+# FAQ answers below this self-reported confidence are not shown to the customer.
+CONFIDENCE_THRESHOLD = 0.4
+LOW_CONFIDENCE_ANSWER = (
+    "I'm not completely sure about that one, so rather than guess "
+    "I'll get someone from our team to help."
+)
 
 FAQ_SYS = """You are Aria, a warm and professional customer service assistant for Bloom Aesthetics Clinic.
 
@@ -158,29 +167,73 @@ def _call(sy, ms):
             time.sleep(wt)
 
 
+_FENCE = re.compile(r"```(?:json)?\s*(.*?)```", re.DOTALL)
+
+
 def _parse(tx):
+    """Extract the JSON object from a model reply.
+
+    Handles bare JSON, ```json fenced blocks and JSON wrapped in stray prose.
+    Raises ValueError if no JSON object can be found.
+    """
+    if not isinstance(tx, str):
+        raise ValueError("model returned no text")
     tx = tx.strip()
-    if tx.startswith("```"):
-        tx = tx.split("```")[1]
-        if tx.startswith("json"):
-            tx = tx[4:]
-    return json.loads(tx.strip())
+    mt = _FENCE.search(tx)
+    if mt:
+        tx = mt.group(1).strip()
+    if not tx.startswith("{"):
+        st, en = tx.find("{"), tx.rfind("}")
+        if st == -1 or en <= st:
+            raise ValueError("no JSON object in model reply")
+        tx = tx[st:en + 1]
+    rt = json.loads(tx)
+    if not isinstance(rt, dict):
+        raise ValueError("model reply is not a JSON object")
+    return rt
+
+
+def _with_defaults(tx, df):
+    """Parse a reply and fill any missing keys from df; fall back to df entirely on parse failure."""
+    try:
+        rt = _parse(tx)
+    except ValueError:
+        return dict(df)
+    return {**df, **rt}
+
+
+def _as_float(vl, df=0.0):
+    try:
+        return float(vl)
+    except (TypeError, ValueError):
+        return df
+
+
+def _as_int(vl, df):
+    try:
+        return int(vl)
+    except (TypeError, ValueError):
+        return df
 
 
 def run_faq(hs):
     sy = FAQ_SYS.format(sop=get_sop_text())
     tx = _call(sy, hs)
 
-    try:
-        rt = _parse(tx)
-    except Exception:
-        rt = {
-            "thought": "Parse error",
-            "answer": "I'm sorry, I had a technical issue. Let me connect you with our team.",
-            "in_sop": False,
-            "confidence": 0.0,
-            "sop_gaps": []
-        }
+    rt = _with_defaults(tx, {
+        "thought": "Parse error",
+        "answer": "I'm sorry, I had a technical issue. Let me connect you with our team.",
+        "in_sop": False,
+        "confidence": 0.0,
+        "sop_gaps": []
+    })
+    rt["in_sop"] = rt["in_sop"] is True
+    rt["confidence"] = _as_float(rt["confidence"])
+
+    # Low-confidence answers are treated as out-of-SOP so Aria hands off instead of guessing.
+    if rt["in_sop"] and rt["confidence"] < CONFIDENCE_THRESHOLD:
+        rt["in_sop"] = False
+        rt["answer"] = LOW_CONFIDENCE_ANSWER
 
     return rt
 
@@ -195,16 +248,13 @@ def run_escalation_check(up, hs):
 
     tx = _call(ESCALATION_SYS, ms)
 
-    try:
-        rt = _parse(tx)
-    except Exception:
-        rt = {
-            "should_escalate": False,
-            "reason": "",
-            "severity": "none",
-            "handoff_message": ""
-        }
-
+    rt = _with_defaults(tx, {
+        "should_escalate": False,
+        "reason": "",
+        "severity": "none",
+        "handoff_message": ""
+    })
+    rt["should_escalate"] = rt["should_escalate"] is True
     return rt
 
 
@@ -217,17 +267,18 @@ def run_qualification(hs, qd, qa):
 
     tx = _call(sy, hs)
 
-    try:
-        rt = _parse(tx)
-    except Exception:
-        rt = {
-            "response": "Could you tell me a bit more about what you're looking for?",
-            "collected_data": {},
-            "questions_asked": qa,
-            "complete": False,
-            "sop_gap": False
-        }
-
+    rt = _with_defaults(tx, {
+        "response": "Could you tell me a bit more about what you're looking for?",
+        "collected_data": {},
+        "questions_asked": qa,
+        "complete": False,
+        "sop_gap": False
+    })
+    if not isinstance(rt["collected_data"], dict):
+        rt["collected_data"] = {}
+    rt["questions_asked"] = _as_int(rt["questions_asked"], qa)
+    rt["complete"] = rt["complete"] is True
+    rt["sop_gap"] = rt["sop_gap"] is True
     return rt
 
 
@@ -251,7 +302,7 @@ Please produce the session summary."""
         }
     ]
 
-    return _call(SUMMARY_SYS, ms)
+    return _call(SUMMARY_SYS, ms) or "Summary unavailable: the model returned an empty response."
 
 
 def _fmt_history(hs):
