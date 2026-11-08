@@ -124,7 +124,7 @@ closira-agent/
 ├── tests/                    # Offline pytest suite (LLM mocked)
 ├── pyproject.toml            # ruff + pytest config
 ├── requirements-dev.txt      # pytest, ruff
-├── logs/
+├── logs/                     # created at runtime (git-ignored)
 │   └── escalations.jsonl     # Appended at runtime
 └── test_transcripts/
     ├── 01_in_sop_question.md
